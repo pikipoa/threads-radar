@@ -2,19 +2,107 @@
 
 import { useState, useEffect } from "react";
 
-const DEMO = {
-  username: "furugi_dungeon",
-  generatedAt: "2026.06.10",
-  summary: { surging: 3, fading: 1, steady: 2, dormant: 1 },
-  highlight: { text: "古着屋行ってきた", multiplier: 7.2, avgViews: 1200, thisViews: 8640 },
-  accountType: { label: "情緒バグ型", sub: "急浮上と急失速が混在しています", danger: "投稿の68%は伸びる直前で止まっています" },
-  anomalyScore: 84,
-  percentile: 12,
-  stats: { upside: "+240%", stability: "-60%" },
+const ACCOUNT_TYPES = [
+  {
+    label: "情緒バグタイプ", rarity: 12,
+    sub: "理由不明・予測不能。アルゴリズムもあなたを理解できていません",
+    phenomenon: {
+      emoji: "⚠️", title: "極端な反応差",
+      desc: "最高view投稿と最低view投稿の差が14.8倍。法則性がなく、何が伸びるか予測できません。",
+      stat: "この現象が観測されるのは全ユーザーの12%",
+    },
+    anomalyScore: 84, percentile: 12,
+    stats: { upside: "+240%", stability: "-60%" },
+    highlight: { text: "古着屋行ってきた", multiplier: 7.2, avgViews: 1200, thisViews: 8640 },
+    summary: { surging: 3, fading: 1, steady: 2, dormant: 1 },
+  },
+  {
+    label: "爆発待ちタイプ", rarity: 21,
+    sub: "伸びる前兆を持っています",
+    phenomenon: {
+      emoji: "🔥", title: "バズ前兆パターン",
+      desc: "過去の大バズアカウントが跳ねる直前によく見られる推移です。今はその静寂期にいる可能性があります。",
+      stat: "この現象が観測されるのは全ユーザーの21%",
+    },
+    anomalyScore: 61, percentile: 21,
+    stats: { upside: "+18%", stability: "-45%" },
+    highlight: { text: "ずっと続けてきた理由", multiplier: 3.1, avgViews: 800, thisViews: 2480 },
+    summary: { surging: 1, fading: 2, steady: 1, dormant: 3 },
+  },
+  {
+    label: "職人タイプ", rarity: 34,
+    sub: "最もアルゴリズムから信頼されているタイプです",
+    phenomenon: {
+      emoji: "🏆", title: "異常な安定",
+      desc: "直近30日間の投稿反応差が驚くほど小さく、常に一定の反応を獲得しています。",
+      stat: "この安定性は全ユーザー上位4%以内",
+    },
+    anomalyScore: 38, percentile: 34,
+    stats: { upside: "+12%", stability: "+82%" },
+    highlight: { text: "毎朝やっていること", multiplier: 1.4, avgViews: 2200, thisViews: 3080 },
+    summary: { surging: 0, fading: 0, steady: 6, dormant: 1 },
+  },
+  {
+    label: "冬眠タイプ", rarity: 8,
+    sub: "観測信号が弱くなっています",
+    phenomenon: {
+      emoji: "💀", title: "観測不能領域",
+      desc: "反応データが少なすぎて通常解析ができません。直近14日間で活動量が73%減少しています。",
+      stat: "この状態から突然復活するアカウントが一定数存在します",
+    },
+    anomalyScore: 72, percentile: 8,
+    stats: { upside: "-38%", stability: "-71%" },
+    highlight: { text: "久しぶりに投稿した", multiplier: 4.8, avgViews: 400, thisViews: 1920 },
+    summary: { surging: 1, fading: 3, steady: 0, dormant: 5 },
+  },
+  {
+    label: "ジェットコースタータイプ", rarity: 25,
+    sub: "振れ幅は最大、当たればデカいタイプです",
+    phenomenon: {
+      emoji: "🎢", title: "超高変動",
+      desc: "振れ幅は全タイプ中最大。沈むときは沈みますが、当たったときの最高到達点は最上位グループです。",
+      stat: "この最高到達点は全ユーザー上位3%",
+    },
+    anomalyScore: 91, percentile: 25,
+    stats: { upside: "+380%", stability: "-88%" },
+    highlight: { text: "これ言っていいのか迷ったけど", multiplier: 12.4, avgViews: 600, thisViews: 7440 },
+    summary: { surging: 4, fading: 3, steady: 1, dormant: 0 },
+  },
+];
+
+type AccountType = typeof ACCOUNT_TYPES[number];
+type DemoData = {
+  username: string;
+  generatedAt: string;
+  accountType: AccountType;
+  anomalyScore: number;
+  percentile: number;
+  stats: { upside: string; stability: string };
+  highlight: { text: string; multiplier: number; avgViews: number; thisViews: number };
+  summary: { surging: number; fading: number; steady: number; dormant: number };
 };
 
-function generateCopyText(d: typeof DEMO) {
-  return "Threadsレーダーで診断したら「" + d.accountType.label + "」だった。\n\n伸びる投稿と沈む投稿の差が激しいらしい。\n\nthreads-radar.vercel.app";
+function pickType(): AccountType {
+  return ACCOUNT_TYPES[Math.floor(Math.random() * ACCOUNT_TYPES.length)];
+}
+
+function buildDemo(): DemoData {
+  const t = pickType();
+  return {
+    username: "furugi_dungeon",
+    generatedAt: "2026.06.10",
+    accountType: t,
+    anomalyScore: t.anomalyScore,
+    percentile: t.percentile,
+    stats: t.stats,
+    highlight: t.highlight,
+    summary: t.summary,
+  };
+}
+
+function generateCopyText(d: DemoData): string {
+  const p = d.accountType.phenomenon;
+  return p.emoji + " " + p.title + "\n\n" + p.stat + "\n\nThreads Radarで観測したら\n" + d.accountType.label + "だった\n\nthreads-radar.vercel.app";
 }
 
 const LOADING_STEPS = [
@@ -52,9 +140,9 @@ export default function ThreadsRadar() {
   const [loadingStep, setLoadingStep] = useState(0);
   const [copied, setCopied] = useState(false);
   const [pulse, setPulse] = useState(true);
-  const d = DEMO;
+  const [d, setD] = useState<DemoData>(() => buildDemo());
 
-  function handleDiagnose() { setPhase("loading"); setLoadingStep(0); }
+  function handleDiagnose() { setD(buildDemo()); setPhase("loading"); setLoadingStep(0); }
 
   useEffect(function () {
     if (phase !== "loading") return;
@@ -91,7 +179,6 @@ export default function ThreadsRadar() {
           <div style={{ textAlign: "center", padding: "8px 0 24px" }}>
             <div style={{ fontSize: "11px", fontWeight: "800", color: "#52525b", letterSpacing: "0.15em", marginBottom: "20px" }}>THREADS RADAR</div>
             <p style={{ fontSize: "22px", fontWeight: "900", color: "#fff", lineHeight: 1.3, marginBottom: "8px" }}>あなたのThreadsの<br />異変を発見します。</p>
-            <p style={{ fontSize: "12px", color: "#52525b", marginBottom: "32px" }}>ログインするだけ。トークン入力不要。</p>
             <button onClick={handleDiagnose} style={primaryBtn("#ef4444")}>Threadsでログインして診断する</button>
             <button onClick={handleDiagnose} style={{ ...ghostBtn, marginTop: "10px" }}>デモを試す</button>
           </div>
@@ -125,10 +212,7 @@ export default function ThreadsRadar() {
                     animation: isActive && pulse ? "pulseIn 0.3s ease" : "none",
                     transition: "color 0.3s",
                   }}>
-                    <span style={{
-                      fontSize: "11px",
-                      color: isDone ? "#3f3f46" : isActive ? "#ef4444" : "#27272a",
-                    }}>
+                    <span style={{ fontSize: "11px", color: isDone ? "#3f3f46" : isActive ? "#ef4444" : "#27272a" }}>
                       {isDone ? "✓" : isActive ? "▶" : "○"}
                     </span>
                     {step}
@@ -149,32 +233,22 @@ export default function ThreadsRadar() {
         <div style={cardBase}>
           <div style={{ padding: "40px 16px 32px", textAlign: "center" }}>
             <div style={{ fontSize: "11px", fontWeight: "800", color: "#52525b", letterSpacing: "0.15em", marginBottom: "28px" }}>THREADS RADAR</div>
-            <div style={{ fontSize: "11px", color: "#ef4444", letterSpacing: "0.12em", fontWeight: "700", marginBottom: "12px" }}>
-              異常パターンを検出
-            </div>
+            <div style={{ fontSize: "11px", color: "#ef4444", letterSpacing: "0.12em", fontWeight: "700", marginBottom: "12px" }}>異常現象を検出</div>
             <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "16px" }}>@{d.username}</div>
             <div style={{ fontSize: "32px", fontWeight: "900", color: "#fff", lineHeight: 1.2, marginBottom: "20px", letterSpacing: "-0.02em" }}>
               {d.accountType.label}
             </div>
             <div style={{
-              display: "inline-block",
-              fontSize: "11px", fontWeight: "700",
-              color: "#f87171",
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.2)",
-              borderRadius: "6px",
-              padding: "5px 12px",
-              marginBottom: "32px",
-              letterSpacing: "0.06em",
+              display: "inline-block", fontSize: "11px", fontWeight: "700",
+              color: "#f87171", background: "rgba(239,68,68,0.1)",
+              border: "1px solid rgba(239,68,68,0.2)", borderRadius: "6px",
+              padding: "5px 12px", marginBottom: "32px", letterSpacing: "0.06em",
             }}>
               異常度ランキング 上位{d.percentile}%
             </div>
             <button onClick={function () { setPhase("result"); }} style={primaryBtn("#ef4444")}>
               ▶ 異常レポートを見る
             </button>
-            <div style={{ marginTop: "12px", fontSize: "10px", color: "#3f3f46" }}>
-              ↑ この画面をスクショしてシェアするのもあり
-            </div>
           </div>
         </div>
       </div>
@@ -200,40 +274,45 @@ export default function ThreadsRadar() {
         </div>
 
         <div style={{ marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid #1f1f23" }}>
-          <div style={{ fontSize: "10px", color: "#ef4444", letterSpacing: "0.12em", fontWeight: "700", marginBottom: "8px" }}>異常パターン検出 / @{d.username}</div>
-          <div style={{ fontSize: "24px", fontWeight: "900", color: "#fff", lineHeight: 1.2, marginBottom: "6px" }}>{d.accountType.label}</div>
-          <div style={{ fontSize: "12px", color: "#71717a", marginBottom: "10px" }}>{d.accountType.sub}</div>
-          <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "8px", padding: "10px 12px", fontSize: "12px", color: "#fca5a5", lineHeight: 1.5 }}>
-            ⚠️ {d.accountType.danger}
+          <div style={{ fontSize: "10px", color: "#ef4444", letterSpacing: "0.12em", fontWeight: "700", marginBottom: "12px" }}>異常現象を検出 / @{d.username}</div>
+          <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: "12px", padding: "14px", marginBottom: "14px" }}>
+            <div style={{ fontSize: "22px", marginBottom: "6px" }}>{d.accountType.phenomenon.emoji}</div>
+            <div style={{ fontSize: "18px", fontWeight: "900", color: "#fff", marginBottom: "8px", lineHeight: 1.2 }}>{d.accountType.phenomenon.title}</div>
+            <div style={{ fontSize: "12px", color: "#a1a1aa", lineHeight: 1.6, marginBottom: "8px" }}>{d.accountType.phenomenon.desc}</div>
+            <div style={{ fontSize: "11px", fontWeight: "700", color: "#f87171" }}>{d.accountType.phenomenon.stat}</div>
           </div>
+          <div style={{ fontSize: "9px", color: "#52525b", letterSpacing: "0.12em", marginBottom: "6px" }}>総合判定</div>
+          <div style={{ fontSize: "20px", fontWeight: "900", color: "#fff", marginBottom: "4px" }}>{d.accountType.label}</div>
+          <div style={{ fontSize: "12px", color: "#71717a" }}>{d.accountType.sub}</div>
         </div>
 
         <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
-          <div style={{ flex: 1, background: "rgba(255,255,255,0.03)", borderRadius: "12px", padding: "14px", textAlign: "center", border: "1px solid #27272a" }}>
-            <div style={{ fontSize: "9px", color: "#52525b", letterSpacing: "0.1em", marginBottom: "4px" }}>異常スコア</div>
-            <div style={{ fontSize: "34px", fontWeight: "900", color: "#ef4444", lineHeight: 1 }}>{d.anomalyScore}</div>
-            <div style={{ fontSize: "9px", color: "#52525b", marginTop: "4px" }}>/ 100</div>
-            <div style={{ marginTop: "8px", fontSize: "10px", color: "#f87171", background: "rgba(239,68,68,0.1)", borderRadius: "4px", padding: "3px 6px" }}>上位 {d.percentile}%</div>
+          <div style={{ flex: 1, background: "rgba(239,68,68,0.06)", borderRadius: "12px", padding: "14px", textAlign: "center", border: "1px solid rgba(239,68,68,0.2)" }}>
+            <div style={{ fontSize: "9px", color: "#71717a", letterSpacing: "0.08em", marginBottom: "8px" }}>この現象が観測される人</div>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "#f87171", marginBottom: "4px" }}>全ユーザーの</div>
+            <div style={{ fontSize: "38px", fontWeight: "900", color: "#ef4444", lineHeight: 1 }}>{d.percentile}<span style={{ fontSize: "18px" }}>%</span></div>
           </div>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
             <div style={{ flex: 1, background: "rgba(249,115,22,0.06)", borderRadius: "10px", padding: "10px 12px", border: "1px solid rgba(249,115,22,0.15)" }}>
-              <div style={{ fontSize: "9px", color: "#71717a", marginBottom: "2px" }}>爆発力</div>
+              <div style={{ fontSize: "9px", color: "#71717a", marginBottom: "2px" }}>投稿のviews伸び率</div>
               <div style={{ fontSize: "20px", fontWeight: "900", color: "#f97316" }}>{d.stats.upside}</div>
+              <div style={{ fontSize: "9px", color: "#52525b", marginTop: "2px" }}>平均との差</div>
             </div>
             <div style={{ flex: 1, background: "rgba(239,68,68,0.06)", borderRadius: "10px", padding: "10px 12px", border: "1px solid rgba(239,68,68,0.15)" }}>
-              <div style={{ fontSize: "9px", color: "#71717a", marginBottom: "2px" }}>安定性</div>
+              <div style={{ fontSize: "9px", color: "#71717a", marginBottom: "2px" }}>投稿ごとのviews安定性</div>
               <div style={{ fontSize: "20px", fontWeight: "900", color: "#ef4444" }}>{d.stats.stability}</div>
+              <div style={{ fontSize: "9px", color: "#52525b", marginTop: "2px" }}>ばらつき</div>
             </div>
           </div>
         </div>
 
         <div style={{ background: "rgba(255,255,255,0.02)", borderRadius: "12px", padding: "14px", marginBottom: "14px", border: "1px solid #27272a" }}>
-          <div style={{ fontSize: "9px", color: "#52525b", letterSpacing: "0.1em", marginBottom: "8px" }}>アルゴリズムに&quot;読まれた&quot;投稿</div>
+          <div style={{ fontSize: "9px", color: "#52525b", letterSpacing: "0.1em", marginBottom: "8px" }}>🔥 アルゴリズムが最も反応した投稿</div>
           <div style={{ fontSize: "13px", fontWeight: "700", color: "#e4e4e7", marginBottom: "10px" }}>「{d.highlight.text}」</div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
               <span style={{ fontSize: "28px", fontWeight: "900", color: "#f97316", lineHeight: 1 }}>{d.highlight.multiplier}x</span>
-              <span style={{ fontSize: "10px", color: "#71717a" }}>の異常値</span>
+              <span style={{ fontSize: "10px", color: "#71717a" }}>= 平均の{d.highlight.multiplier}倍のviews</span>
             </div>
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: "10px", color: "#52525b" }}>平均 {d.highlight.avgViews.toLocaleString()} views</div>
@@ -242,6 +321,7 @@ export default function ThreadsRadar() {
           </div>
         </div>
 
+        <div style={{ fontSize: "9px", color: "#52525b", letterSpacing: "0.1em", marginBottom: "8px" }}>直近30日間の投稿 {d.summary.surging + d.summary.fading + d.summary.steady + d.summary.dormant}件の内訳</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "6px", marginBottom: "16px" }}>
           {stat.map(function (s) {
             return (
@@ -252,6 +332,17 @@ export default function ThreadsRadar() {
               </div>
             );
           })}
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.02)", borderRadius: "10px", padding: "12px 14px", marginBottom: "14px", border: "1px solid #27272a", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: "9px", color: "#52525b", letterSpacing: "0.1em", marginBottom: "3px" }}>観測頻度</div>
+            <div style={{ fontSize: "12px", color: "#a1a1aa" }}>同じ現象を示しています</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "26px", fontWeight: "900", color: "#a78bfa", lineHeight: 1 }}>{d.accountType.rarity}%</div>
+            <div style={{ fontSize: "9px", color: "#52525b", marginTop: "2px" }}>全ユーザーの</div>
+          </div>
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
